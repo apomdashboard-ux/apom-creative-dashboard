@@ -233,8 +233,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* Gantt autofeed banner */
 .autofeed-banner{background:var(--purple-l);border:1px solid rgba(83,74,183,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--purple-t);display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;visibility:hidden;}
-.modal-overlay.open{opacity:1;pointer-events:all;visibility:visible;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:1.75rem;width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;transform:translateY(8px);transition:transform .2s;}
 .modal-overlay.open .modal{transform:translateY(0);}
 .modal-title{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:1.25rem;}
@@ -279,10 +279,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="layout">
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div style="padding:6px 0 8px;">
-      <div style="font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:.02em;color:var(--text);line-height:1;">APOM!</div>
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;">Creative Dept</div>
-    </div>
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 44'%3E%3Crect width='140' height='44' rx='4' fill='%23F6F4EF'/%3E%3Ctext x='8' y='30' font-family='serif' font-size='26' font-weight='700' fill='%231C1A17' letter-spacing='1'%3EAPOM!%3C/text%3E%3C/svg%3E" alt="APOM!" style="width:100%;max-width:140px;display:block;border-radius:6px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div style="display:none;font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);letter-spacing:.04em;">APOM!</div>
+    <div class="sidebar-dept">Creative<br>Department</div>
     <div class="sidebar-sub">Q2 2026</div>
     <div class="sidebar-sub" id="sdate"></div>
   </div>
