@@ -461,6 +461,15 @@ async function fsDel(p){await fetch(`${BASE}/${p}?key=${KEY}`,{method:"DELETE"})
 function toFS(obj){const o={};for(const[k,v]of Object.entries(obj)){if(typeof v==="string")o[k]={stringValue:v};else if(typeof v==="boolean")o[k]={booleanValue:v};else if(typeof v==="number")o[k]={integerValue:String(v)};else if(Array.isArray(v))o[k]={arrayValue:{values:v.map(x=>({stringValue:x}))}};else o[k]={nullValue:null};}return o;}
 function fromFS(doc){if(!doc||!doc.fields)return{};const o={id:doc.name?doc.name.split("/").pop():""};for(const[k,v]of Object.entries(doc.fields)){if(v.stringValue!==undefined)o[k]=v.stringValue;else if(v.booleanValue!==undefined)o[k]=v.booleanValue;else if(v.integerValue!==undefined)o[k]=parseInt(v.integerValue);else if(v.arrayValue)o[k]=(v.arrayValue.values||[]).map(x=>x.stringValue||"");else o[k]=null;}return o;}
 
+// ── helpers defined first so they can be called during init ──
+function getWeekKey(d=new Date()){const day=d.getDay(),diff=d.getDate()-day+(day===0?-6:1),m=new Date(d);m.setDate(diff);return m.toISOString().split("T")[0];}
+function fmtWeek(k){const d=new Date(k+"T00:00:00"),e=new Date(d);e.setDate(d.getDate()+6);return d.toLocaleDateString("en-MY",{day:"numeric",month:"short"})+" – "+e.toLocaleDateString("en-MY",{day:"numeric",month:"short",year:"numeric"});}
+function fmtDate(s){if(!s)return"";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-MY",{day:"numeric",month:"short"});}
+function isThisWeek(dateStr){if(!dateStr)return false;const d=new Date(dateStr+"T00:00:00"),wk=new Date(currentWeek+"T00:00:00"),we=new Date(wk);we.setDate(wk.getDate()+6);return d>=wk&&d<=we;}
+function isDueSoon(dateStr){if(!dateStr)return"";const d=new Date(dateStr+"T00:00:00"),now=new Date();const diff=Math.ceil((d-now)/(1000*60*60*24));if(diff<0)return"overdue";if(diff<=2)return"urgent";if(diff<=5)return"soon";return"";}
+function escHtml(s){return(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+function setSyncStatus(s,t){const dot=document.getElementById("sdot"),txt=document.getElementById("stxt");if(dot)dot.className="sync-dot"+(s==="busy"?" busy":"");if(txt)txt.textContent=t;}
+
 let jobs=[],tasks={},obstacles=[],krRatings={};
 let currentWeek=getWeekKey(),editJobId=null,obsFilter="all";
 let gSortCat="all",gPF="all",viewStart=new Date("2026-04-14");
@@ -805,17 +814,36 @@ async function resolveObs(id){
   obstacles=obstacles.filter(o=>o.id!==id);renderObstacles();setSyncStatus("ok","Saved ✓");
 }
 
-// ── NAV / MODAL ───────────────────────────────────────────
-function showTab(id,btn){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");if(btn)btn.classList.add("active");if(id==="gantt")renderGantt();}
+// ── NAV / MODAL — runs immediately, independent of Firebase ──
+function showTab(id,btn){
+  try{
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+    var sec=document.getElementById(id);
+    if(sec)sec.classList.add("active");
+    if(btn)btn.classList.add("active");
+    if(id==="gantt")renderGantt();
+  }catch(e){console.error("showTab error:",e);}
+}
 function jumpOkr(){showTab("okr",document.querySelectorAll(".nav-item")[1]);}
-function openModal(id){document.getElementById(id).classList.add("open");}
+function openModal(id){var el=document.getElementById(id);if(el)el.classList.add("open");}
 function closeModals(){document.querySelectorAll(".modal-overlay").forEach(m=>m.classList.remove("open"));}
-document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals();}));
+document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",function(e){if(e.target===m)closeModals();}));
 
-const now=new Date();
-document.getElementById("sdate").textContent=now.toLocaleDateString("en-MY",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
-document.getElementById("today-badge").textContent=now.toLocaleDateString("en-MY",{day:"numeric",month:"short",year:"numeric"});
-loadAll();
+// Date labels — run immediately
+try{
+  var now=new Date();
+  var sdate=document.getElementById("sdate");
+  var tbadge=document.getElementById("today-badge");
+  if(sdate)sdate.textContent=now.toLocaleDateString("en-MY",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+  if(tbadge)tbadge.textContent=now.toLocaleDateString("en-MY",{day:"numeric",month:"short",year:"numeric"});
+}catch(e){}
+
+// Firebase — wrapped in IIFE so errors never kill the nav
+(async function(){
+  try{ await loadAll(); }
+  catch(e){ console.error("Firebase load error:",e); setSyncStatus("busy","Check connection"); }
+})();
 </script>
 </body>
 </html>
